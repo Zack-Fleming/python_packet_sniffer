@@ -62,3 +62,15 @@ The main platform for this project will be Linux, the same platform it will be d
 
 
 ## Project Plan
+
+Below is the Gantt chart for the project. the chart is broken into four sprints:
+ - Sprint 1 Core Functionality - The main fuctionality of unpacking network traffiuc is added
+     - functionality for the unpacking of ethernet frames and the different types of IP packets
+ - Sprint 2 GUI Components - The GUI of the program is added
+     - The main GUI, main menus, HEX data view, and text data view
+ - Sprint 3 Capture Controls - Controls for captures is added
+     - Controls include (NEW | OPEN | SAVE | START | STOP | EDIT | QUIT)
+ - Sprint 4 Creature Comforts - nice features are added
+     - features like the ability to customize themes and import/export themes
+
+![Gantt chart for the project](https://github.com/Zack-Fleming/python_sniffer_and_Firewall/blob/master/gantt-chart.png)
