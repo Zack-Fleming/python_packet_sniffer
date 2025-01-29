@@ -41,9 +41,9 @@ This project will use a variety of technologies and libraries including:
  - python-libcap
  - py2exe & py2app
 
-The project will be using a Raspberry PI due to its portable nature and highly customizable GPIO. The raspberry PI is a very customizable computer that does not have the bloat of other Operating Systems and gives access to the raw GPIO of the computer, both on the header and standardized ports (i.e. USB, RJ45, etc.).
+The project will be using a Raspberry PI due to its portable nature and highly customizable GPIO. The raspberry PI is a very customizable computer that does not have the bloat of other Operating Systems and gives access to the raw GPIO of the computer, both on the header and standardized ports (i.e. USB, RJ45, etc.). The form factor ofthe Raspberry PI makes it a great platform for embedded applications or applications that need to be smaller. The use of the software of this project does not need to use a Raspberry PI, as the use of project uses Python which is platform independent. The use of a Raspberry PI is to learn the use of a new platform.
 
-Python is used for both its simplicity and its use in data science and analysis. Python is also partially platform independent. The libraries used may change due to platform. For example, in a linux OS this project will use socket.AF_PACKET for the parameter for the network socket used. THis is a field that is not known in Windows platforms and will have to use another library called scapy. 
+Python is used for both its simplicity and its use in data science and analysis. Python is also partially platform independent. The libraries used may change due to platform dependence. For example, in a linux OS this project will use socket.AF_PACKET for the parameter for the network socket used. THis is a field that is not known in Windows platforms and will have to use another library called scapy. 
 
 Socket and or Scapy will be used for this project for the capturing of hte network traffic data. Socket is used for the Linux-based OS like the Raspberry PI OS. Scapy would be the substitute for windows platforms. The library use could be simplified to only Scapy for OS independence. However, the sniffer code uses the socket library and would have to be reworked for scapy. Also, socket comes with the base install of Python and Scapy does not. This would simplify the installation of the software for another user. Also, scapy can be used to simulate specific types of traffic, for testing either the main capturing or flagging of the network traffic. 
 
@@ -74,3 +74,9 @@ Below is the Gantt chart for the project. the chart is broken into four sprints:
      - features like the ability to customize themes and import/export themes
 
 ![Gantt chart for the project](https://github.com/Zack-Fleming/python_sniffer_and_Firewall/blob/master/gantt-chart.png)
+
+
+## Works Cited
+
+ - https://www.raspberrypi.com/products/raspberry-pi-5/
+ - https://docs.python.org/3/library/socket.html
