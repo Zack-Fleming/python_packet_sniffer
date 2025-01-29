@@ -80,3 +80,8 @@ Below is the Gantt chart for the project. the chart is broken into four sprints:
 
  - https://www.raspberrypi.com/products/raspberry-pi-5/
  - https://docs.python.org/3/library/socket.html
+ - https://www.py2exe.org
+ - https://py2app.readthedocs.io/en/latest/
+ - https://docs.python.org/3/library/tkinter.html
+ - https://docs.python.org/3/library/struct.html
+ - https://github.com/caizhengxin/python-libpcap
