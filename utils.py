@@ -1,4 +1,4 @@
-eth_dict={
+eth_dict= {
     "0x0800": "Internet Protocol Version 4 (IPv4)",
     "0x0806": "Address Resolution Protocol (ARP)",
     "0x0842": "Wake-on-LAN",
@@ -790,6 +790,72 @@ ip_prot_dict = {
     }
 }
 
+ip_vers_dict= {
+    0: {
+        "description": "Internet Protocol, pre IPv4",
+        "status": "Reserved"
+    },
+    1: {
+        "description": "n/a",
+        "status": "Unassigned"
+    },
+    2: {
+        "description": "n/a",
+        "status": "Unassigned"
+    },
+    3: {
+        "description": "n/a",
+        "status": "Unassigned"
+    },
+    4: {
+        "description": "Internet Protocol Version 4 (IPv4)",
+        "status": "Active"
+    },
+    5: {
+        "description": "Internet Stream Protocol (ST or ST II)",
+        "status": "Obsolete"
+    },
+    6: {
+        "description": "Internet Protocol Version 6 (IPv6)",
+        "status": "Active"
+    },
+    7: {
+        "description": "TP/IX THe Next Internet (IPv7)",
+        "status": "Obsolete"
+    },
+    8: {
+        "description": "P Internet Protocol (PIP)",
+        "status": "Obsolete"
+    },
+    9: {
+        "description": "IPv9 or Chinese IPv9",
+        "status": "Obsolete"
+    },
+    10: {
+        "description": "n/a",
+        "status": "Unassigned"
+    },
+    11: {
+        "description": "n/a",
+        "status": "Unassigned"
+    },
+    12: {
+        "description": "n/a",
+        "status": "Unassigned"
+    },
+    13: {
+        "description": "n/a",
+        "status": "Unassigned"
+    },
+    14: {
+        "description": "n/a",
+        "status": "Unassigned"
+    },
+    15: {
+        "description": "Version field sentinel value",
+        "status": "Reserved"
+    }
+}
 
 
 
@@ -812,4 +878,12 @@ def get_ip_protocol(protocol):
     elif protocol == '0xFF':
         return 'n/a', 'Reserved', 'n/a', 3
     else:
-        return 'n/a', 'n/a', 'n/a', 4
+        return None, None, None, 4
+
+
+# get the version of the IP packet
+def get_ip_vers(version):
+    if version in ip_vers_dict:
+        return ip_vers_dict.get(version).get("description"), ip_vers_dict.get(version).get('status'), 0
+    else:
+        return None, None, 1

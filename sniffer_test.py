@@ -2,6 +2,7 @@ import socket
 import struct
 import textwrap
 import utils
+import sys
 
 # main loop
 def main():
@@ -14,12 +15,18 @@ def main():
         # unpack the Ethernet Frame
         dest_mac, src_mac, eth_type, ip_data = unpack_frame(data_raw)
         print('\n\nEthernet Frame Data:')
-        print('\tDestination: {}, \n\tSource: {}, \n\tEtherType: \n\t\t(DEC): {}, \n\t\t(HEX): {}, \n\t\t(STR): {}'.format(dest_mac, src_mac, eth_type, '0x{:04x}'.format(eth_type).upper(), utils.get_eth_str('0x' + '{:04x}'.format(eth_type).upper())))
+        print('\tDestination: {}, \n\tSource: {}, \n\tEtherType: \n\t\t(DEC): {}, \n\t\t(BIN): {}, \n\t\t(HEX): {}, \n\t\t(STR): {}'.format(dest_mac, src_mac, eth_type, format(eth_type, '#018b'), '0x' + '{:04x}'.format(eth_type).upper(), utils.get_eth_str('0x' + '{:04x}'.format(eth_type).upper())))
 
-        # unpack the IP Packet
-        ver, ihl, serv_type = unpack_IP(ip_data)
+        # get the version of the packet
+        version = get_packet_version(ip_data)
+        ver_desc, ver_status, code = utils.get_ip_vers(version)
         print('\tIP Packet Data:')
-        print('\t\tVersion: {}\n\t\tIHL: {}\n\t\tService Type: {}'.format(ver, ihl, serv_type))
+        print('\t\tVersion: \n\t\t\t(DEC): {}, \n\t\t\t(BIN): {}, \n\t\t\t(HEX): {}\n\t\t\tDescription: {},\n\t\t\tStatus: {}'.format(version, format(version, '#06b'), '0x' + '{:02x}'.format(version).upper(), ver_desc, ver_status))
+        
+        # check if the packet is IPv4 or IPv6
+        if version == 4:
+            ihl, tos, tot_len, ID, flags, frag_offl = unpack_IPv4(ip_data)
+            print('\t\tIHL: {}bytes\n\t\tType of Service: {}\n\t\tTotal Length: {}\n\t\tIdentification: {}\n\t\tFlags: {}\n\t\tFragment Offset: {}'.format(ihl, tos, tot_len, ID, flags, ''.join(format(ord(frag_offl), '08b'))))
 
 
 # unpacking the ethernet frame
@@ -34,12 +41,18 @@ def format_mac(mac):
     return ':'.join(mac_str).upper()
 
 
+# get the version of the packet
+def get_packet_version(data):
+    return data[0] >> 4
+
+
 # unpack the IP packet data
-def unpack_IP(data):
-    version_IHL = data[0]
-    version = version_IHL >> 4
-    IHL = (version_IHL & 15) * 4
-    return version, IHL, data[1]
+def unpack_IPv4(data):
+    IHL = (data[0] & 15) * 4
+    flags = data[6] >> 5
+    frag = data[6:7]
+
+    return IHL, data[1], data[2:3], data[4:5], format(flags, '#05b'), frag
 
 
 
