@@ -75,7 +75,23 @@ Below is the Gantt chart for the project. the chart is broken into four sprints:
  - Sprint 4 Creature Comforts - nice features are added
      - features like the ability to customize themes and import/export themes
 
-![Gantt chart for the project](https://github.com/Zack-Fleming/python_sniffer_and_Firewall/blob/master/gantt-chart.png)
+Full Gantt chart: \
+![Gantt chart for the project](https://github.com/Zack-Fleming/python_sniffer_and_Firewall/blob/master/images/gantt_full.png)
+
+Tasks of the Gantt chart: \
+![Tasks of the Gantt chart](https://github.com/Zack-Fleming/python_sniffer_and_Firewall/blob/master/images/gantt_tasks.png)
+
+Sprint 1: \
+![Sprint 1 of the Gantt chart](https://github.com/Zack-Fleming/python_sniffer_and_Firewall/blob/master/images/gantt_sprint_1.png)
+
+Sprint 2: \
+![Sprint 2 of the Gantt chart](https://github.com/Zack-Fleming/python_sniffer_and_Firewall/blob/master/images/gantt_sprint_2.png)
+
+Sprint 3: \
+![Sprint 3 of the Gantt chart](https://github.com/Zack-Fleming/python_sniffer_and_Firewall/blob/master/images/gantt_sprint_3.png)
+
+Sprint 4: \
+![Sprint 4 of the Gantt chart](https://github.com/Zack-Fleming/python_sniffer_and_Firewall/blob/master/images/gantt_sprint_4.png)
 
 
 ## Works Cited
