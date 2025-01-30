@@ -80,11 +80,11 @@ Below is the Gantt chart for the project. the chart is broken into four sprints:
 
 ## Works Cited
 
-[1] - Raspberry PI 5 Technical Specifications, https://www.raspberrypi.com/products/raspberry-pi-5/
-[2] - Socket Library Documentation, https://docs.python.org/3/library/socket.html
-[3] - Py2exe Library Documentation, https://www.py2exe.org
-[4] - Py2app Library Documentation, https://py2app.readthedocs.io/en/latest/
-[5] - TKinter Library Documentation, https://docs.python.org/3/library/tkinter.html
-[6] - Struct Library Documentation, https://docs.python.org/3/library/struct.html
-[7] - python-libpcap Library Documentation, https://github.com/caizhengxin/python-libpcap
-[8] - Scapy Library Documentation, https://scapy.net
+[1] - Raspberry PI 5 Technical Specifications, https://www.raspberrypi.com/products/raspberry-pi-5/ \
+[2] - Socket Library Documentation, https://docs.python.org/3/library/socket.html \
+[3] - Py2exe Library Documentation, https://www.py2exe.org \
+[4] - Py2app Library Documentation, https://py2app.readthedocs.io/en/latest/ \
+[5] - TKinter Library Documentation, https://docs.python.org/3/library/tkinter.html \
+[6] - Struct Library Documentation, https://docs.python.org/3/library/struct.html \
+[7] - python-libpcap Library Documentation, https://github.com/caizhengxin/python-libpcap \
+[8] - Scapy Library Documentation, https://scapy.net \
