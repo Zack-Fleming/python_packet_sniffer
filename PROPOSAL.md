@@ -41,19 +41,21 @@ This project will use a variety of technologies and libraries including:
  - python-libcap
  - py2exe & py2app
 
-The project will be using a Raspberry PI due to its portable nature and highly customizable GPIO. The raspberry PI is a very customizable computer that does not have the bloat of other Operating Systems and gives access to the raw GPIO of the computer, both on the header and standardized ports (i.e. USB, RJ45, etc.). The form factor ofthe Raspberry PI makes it a great platform for embedded applications or applications that need to be smaller. The use of the software of this project does not need to use a Raspberry PI, as the use of project uses Python which is platform independent. The use of a Raspberry PI is to learn the use of a new platform.
+The project will be using a Raspberry PI due to its portable nature and highly customizable GPIO [1]. The raspberry PI is a very customizable computer that does not have the bloat of other Operating Systems and gives access to the raw GPIO of the computer, both on the header and standardized ports (i.e. USB, RJ45, etc.). The form factor ofthe Raspberry PI makes it a great platform for embedded applications or applications that need to be smaller. The use of the software of this project does not need to use a Raspberry PI, as the use of project uses Python which is platform independent. The use of a Raspberry PI is to learn the use of a new platform.
 
-Python is used for both its simplicity and its use in data science and analysis. Python is also partially platform independent. The libraries used may change due to platform dependence. For example, in a linux OS this project will use socket.AF_PACKET for the parameter for the network socket used. THis is a field that is not known in Windows platforms and will have to use another library called scapy. 
+Python is used for both its simplicity and its use in data science and analysis. Python is also partially platform independent. The libraries used may change due to platform dependence. For example, in a linux OS this project will use socket.AF_PACKET parameter for the network socket used. This is a field that is not available in Windows platforms and will have to use another library instead. 
 
-Socket and or Scapy will be used for this project for the capturing of hte network traffic data. Socket is used for the Linux-based OS like the Raspberry PI OS. Scapy would be the substitute for windows platforms. The library use could be simplified to only Scapy for OS independence. However, the sniffer code uses the socket library and would have to be reworked for scapy. Also, socket comes with the base install of Python and Scapy does not. This would simplify the installation of the software for another user. Also, scapy can be used to simulate specific types of traffic, for testing either the main capturing or flagging of the network traffic. 
+Socket is the main Python library used for this project. Socket gives low-level acces to network adapters [2]. The library also gives direct system call access to the sockets on network adapters. This specific feature will not be used, instead reading the raw packet and frame data of the adapter will be used. Socket can even allow the ability to specify the adapter used. However, the use of this option requires root access in order to set the option. 
 
-For the GUI and visualization, this project will be using TKinter. TKinter is a simple GUI library for Python that is decently documented, allowing for easy use. THere are other libraries such as PyQt, Kivy, wxPython. TKinter is the simplest of the GUI libraries. If the GUI side of the project is to complex, another library may be supplemented.
+This project will also be using Scapy for network traffic operations. Scapy is a network packet manipulation library for Python [8]. Scapy can also decode packets as well. This funcionality will only be used to compare results of decoding to this project, as that is the main purpose of this project. Using a library to accomplish this, would circumvent exploring the protocols on a low-level. Scapy is also used to create packets for network programming. I will use this functionality to generate traffic with specific options and dat set, in order to test the decoding of packets and flagging of certain data. 
 
-Struct is used to unpack the data using predictable formats and sizes. Struct can also pack data into a format for the pcap file generation or custom file generation. The formatting options of input data are used for headers where the data is in predicable formats and lengths that do not change. For example, the IPv6 packet header is a static size and the location and size of the options are also static. For IPv4, custom data handling is required due to some bytes of data holding multiple fields of different sizes.
+For the GUI and visualization, this project will be using TKinter [5]. TKinter is a simple GUI library for Python that is decently documented, allowing for easy use. There are other libraries such as PyQt, Kivy, wxPython. TKinter is the simplest of the GUI libraries. If the GUI side of the project is to complex, another library may be supplemented.
 
-Python-libcap is a library that provides functionality of pcap files to python. The pcap file is mainly used in programs like WireShark and Ncap. The file contains the raw packet data and timestamp for the duration of the capture. These files can be one or two packets, or thousands of packets. python-libcap can also be used to do the traffic capturing and list network interfaces. I will not be using the capturing feature, as my program will be implementing that feature from scratch.
+Struct is used to unpack the data using predictable formats and sizes [6]. Struct can also pack data into a format for the pcap file generation or custom file generation. The formatting options of input data are used for headers where the data is in predicable formats and lengths that do not change. For example, the IPv6 packet header is a static size and the location and size of the options are also static. For IPv4, custom data handling is required due to some bytes of data holding multiple fields of different sizes.
 
-Py2exe and py2app are extensions that can create executables for windows and Mac Os respectively. They both have the ability to bundle dependencies inside the executable or require them to be placed into the same directory or a defined directory. Py2app has the downside of requiring the building process to be on a mac device. I may need to create a Mac OS VM to copy the source code to and build and test the executable. I would assume that the py2exe would also require the executable be built on a windows machine, however, the documentation of the library does not specify this face. If it does, I already have two windows machines, and would have to copy the source to one of them, similarly to the Mac OS VM.
+Python-libcap is a library that provides functionality of pcap files to python [7]. The pcap file is mainly used in programs like WireShark and Ncap. The file contains the raw packet data and timestamp for the duration of the capture. These files can be one or two packets, or thousands of packets. python-libcap can also be used to do the traffic capturing and list network interfaces. I will not be using the capturing feature, as my program will be implementing that feature from scratch.
+
+Py2exe and py2app are extensions that can create executables for windows and Mac OS respectively [3] [4]. They both have the ability to bundle dependencies inside the executable or require them to be placed into the same directory or a defined directory. Py2app has the downside of requiring the building process to be on a mac device. I may need to create a Mac OS VM to copy the source code to and build and test the executable. I would assume that the py2exe would also require the executable be built on a windows machine, however, the documentation of the library does not specify this face. If it does, I already have two windows machines, and would have to copy the source to one of them, similarly to the Mac OS VM.
 
 
 ## Platform
@@ -78,10 +80,11 @@ Below is the Gantt chart for the project. the chart is broken into four sprints:
 
 ## Works Cited
 
- - https://www.raspberrypi.com/products/raspberry-pi-5/
- - https://docs.python.org/3/library/socket.html
- - https://www.py2exe.org
- - https://py2app.readthedocs.io/en/latest/
- - https://docs.python.org/3/library/tkinter.html
- - https://docs.python.org/3/library/struct.html
- - https://github.com/caizhengxin/python-libpcap
+[1] - Raspberry PI 5 Technical Specifications, https://www.raspberrypi.com/products/raspberry-pi-5/
+[2] - Socket Library Documentation, https://docs.python.org/3/library/socket.html
+[3] - Py2exe Library Documentation, https://www.py2exe.org
+[4] - Py2app Library Documentation, https://py2app.readthedocs.io/en/latest/
+[5] - TKinter Library Documentation, https://docs.python.org/3/library/tkinter.html
+[6] - Struct Library Documentation, https://docs.python.org/3/library/struct.html
+[7] - python-libpcap Library Documentation, https://github.com/caizhengxin/python-libpcap
+[8] - Scapy Library Documentation, https://scapy.net
