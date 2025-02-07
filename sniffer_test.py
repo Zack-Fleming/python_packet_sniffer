@@ -1,22 +1,31 @@
 import socket
+import datetime
 import struct
 import textwrap
+import time
+
 import utils
-import sys
 
 # main loop
 def main():
+    # create a socket connection
     connection = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.ntohs(3))
+    start_time = time.time()  # start time for stopwatch for packets
 
     while True:
         # capture a packet
         data_raw, addr = connection.recvfrom(65535)
+        # end time for stopwatch timestamp
+        end_time = time.time()
 
         # unpack the Ethernet Frame
         dest_mac, src_mac, eth_type, packet_data = unpack_frame(data_raw)
 
         if sum(src_mac) != 0 or sum(dest_mac) != 0:
-            print('\n\nEthernet Frame Data:')
+            # print time and packet size
+            print('Packet Info:\n\tLength: {}\n\tTimestamp: {}'.format(len(data_raw), (end_time-start_time)))
+
+            print('Ethernet Frame Data:')
             print('\tDestination: {}, \n\tSource: {}, \n\tEtherType: \n\t\t(DEC): {}, \n\t\t(BIN): {}, \n\t\t(HEX): {}, \n\t\t(STR): {}'.format(format_mac(dest_mac), format_mac(src_mac), eth_type, format(eth_type, '#018b'), '0x' + '{:04x}'.format(eth_type).upper(), utils.get_eth_str('0x' + '{:04x}'.format(eth_type).upper())))
 
             # unpack ARP packet
