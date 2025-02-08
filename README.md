@@ -51,7 +51,39 @@ The GUI of the software will contain a few main components. The components inclu
 
 #### Menu/Search Bar
 
-The menu and search bar contains program controls as well as the filter search bar and accompanying active filter(s) list. The menu section of this bar is split into two dropdowns, file and capture operations. The file operations contain: NEW, OPEN, and SAVE options. The capture operations dropdown contain: START, STOP, and EDIT options. 
+The menu and search bar contains program controls as well as the filter search bar and accompanying active filter(s) list. The menu section of this bar is split into two dropdowns, file and capture operations. The file operations contain: NEW, OPEN, and SAVE options. The capture operations dropdown contain: START, STOP, and EDIT options.
+
+#### Packet List
+
+The packet list pane, by default, takes up around half the height of the window, and contains the list of captured packets of the current capture or the list of filtered packets. The list is in a table-like format, with the following columns: ID, Timestamp, Packet Length, Source IP/MAC, Destination IP/Mac, Protocol, Info. Each protocol will have its own background color or easy differentiation. These colors will be customizable when the theme customization is implemented. The user will be able to set multiple protocols to the same color, if they whish to group certain protocol(s) in the same 'group'. Users may also select the columns shown in the packet list pane, if they do not wish to see certain columns.
+
+#### HEX/BIN Viewer
+
+The hexadecimal or binary viewer pane has three main sections: address, HEX/BIN data, and ASCII data. The address shows the index/address of the data in the packet. The HEX/BIN data section  show the data of the packet in either HEX or BIN. The ASCII data section, shows the data in the packet using the ASCII representation, with non-printable characters as a ghostly dot, showing the number of characters. If the pane is in HEX mode, each line has 16 bytes of data, just like any other hex viewer/editor. However, when in BIN mode, the data is in four bytes per line, with a column space in between each byte. 
+
+The various header keys will be color coded in the HEX/BIN viewer and in the text viewer. This color coding will be the background of the HEX/BIN viewer and the font color, foreground color, of the text pane. These colors are also user customizable, just like any other color in the program. Such color customization will be documented in the 'Theme Specification' section of the README.
+
+#### Text Viewer
+
+The text viewer pane will show the data of the packets in a key-value format, as shown under [Packet Sniffing Features](#packet-sniffing-features). For the various encapsulations will be under an accompanying drop-down. For example, the Ethernet frame will have a drop down section just like each type of packet, An example of this is shown below:
+
+> Ethernet Frame: v <-- dropdown \
+> &emsp;&emsp;< EHTERNET FRAME DATA > \
+> &emsp;&emsp;IPv4 Packet: v <-- dropdown \
+> &emsp;&emsp;&emsp;&emsp;< IPv4 PACKET DATA > \
+> &emsp;&emsp;&emsp;&emsp;TCP/IP Packet: v <-- dropdown \
+> &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;< TCP/IP PACKET DATA >
+
+OR 
+
+> Ethernet Frame: v <-- dropdown \
+> &emsp;&emsp;< EHTERNET FRAME DATA > \
+> IPv4 Packet: v <-- dropdown \
+> &emsp;&emsp;< IPv4 PACKET DATA > \
+> TCP/IP Packet: v <-- dropdown \
+> &emsp;&emsp;< TCP/IP PACKET DATA >
+
+The first example would show the layered encapsulation of the payload of the traffic. As in the example, it would show that a TCP/IP packet is inside an IPv4 Packet, which is inside an Ethernet Frame. The second example would just show each encapsulated packet as their own section, but would not necessarily show the layers of encapsulation. 
 
 
 ### Creature Comfort Features
