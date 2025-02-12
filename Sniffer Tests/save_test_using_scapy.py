@@ -1,6 +1,4 @@
-import socket
 from scapy.all import *
-from scapy.layers.inet import IP
 
 # create a connection
 connection = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.ntohs(3))
@@ -11,7 +9,7 @@ packets = []
 for i in range(10):
     print(str(i))
     # capture a packet
-    packet = connection.recv(65535)
+    packet, addr = connection.recvfrom(65535)
     # append packet to list
     packets.append(packet)
 

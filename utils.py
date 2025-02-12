@@ -857,6 +857,96 @@ ip_vers_dict= {
     }
 }
 
+icmp_codes_dict = {
+    "0": {
+        "type": "Echo Reply",
+        "status": "active",
+        "subtype": {
+            "0": "Echo Reply"
+        }
+    },
+    "1": {
+        "type": "n/a",
+        "status": "unassigned",
+        "subtype": {
+            "0": "Reserved"
+        }
+    },
+    "2": {
+        "type": "n/a",
+        "status": "unassigned",
+        "subtype": {
+            "0": "Reserved"
+        }
+    },
+    "3": {
+        "type": "Destination Unreachable",
+        "status": "active",
+        "subtype": {
+            "0": "Destination Network Unreachable",
+            "1": "Destination HOst Unreachable",
+            "2": "Destination Protocol Unreachable",
+            "4": "Fragmentation Required (DF flag set)",
+            "5": "Source Route Field",
+            "6": "Destination Network Unknown",
+            "7": "Destination Host Unknown",
+            "8": "Source Host Isolated",
+            "9": "Network Administratively Prohibited",
+            "10": "Host Administratively Prohibited",
+            "11": "Network Unreachable for ToS",
+            "12": "Host Unreachable for ToS",
+            "13": "Communication Administratively Prohibited",
+            "14": "Host Precedence Violation",
+            "15": "Precedence Cutoff in Effect"
+        }
+    },
+    "4": {
+        "type": "Source Quench",
+        "status": "deprecated",
+        "subtype": {
+            "0": "Source Quench (Congestion Control)"
+        }
+    },
+    "5": {
+        "type": "Redirect Message",
+        "status": "active",
+        "subtype": {
+            "0": "Redirect Datagram for the Network",
+            "1": "Redirect Datagram for the Host",
+            "2": "Redirect Datagram for the ToS & Network",
+            "3": "Redirect Datagram for the ToS & Host"
+        }
+    },
+    "6": {
+        "type": "n/a",
+        "status": "deprecated",
+        "subtype": {
+            "0": "Alternate Host Address"
+        }
+    },
+    "7": {
+        "type": "n/a",
+        "status": "unassigned",
+        "subtype": {
+            "0": "Reserved"
+        }
+    },
+    "8": {
+        "type": "Echo Request",
+        "status": "active",
+        "subtype": {
+            "0": "Echo Request"
+        }
+    },
+    "9": {
+        "type": "Router Advertisement",
+        "status": "active",
+        "subtype": {
+            "0": "Router Advertisement"
+        }
+    }
+}
+
 
 
 # convert the hex of EtherType to the string name
@@ -887,3 +977,12 @@ def get_ip_vers(version):
         return ip_vers_dict.get(version).get("description"), ip_vers_dict.get(version).get('status'), 0
     else:
         return None, None, 1
+
+
+# get the type and subtype for ICMP
+def get_icmp_type(type_code, subtype_code):
+    if type_code in icmp_codes_dict.keys():
+        type_data = icmp_codes_dict.get(type_code)
+        return type_data.get("type"), type_data.get("subtype").get(subtype_code), type_data.get("status"), 0
+    else:
+        return None, None, None, 1
