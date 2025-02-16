@@ -1,13 +1,5 @@
-import socket
-import datetime
-import struct
-import textwrap
-import time
-import keyboard
 from scapy.all import *
-
-import utils
-from utils import get_ip_protocol, get_icmp_type
+from utility.utils import *
 
 
 # main loop
@@ -32,7 +24,7 @@ def main():
                 # print the Ethernet frame data
                 print('Ethernet Frame Data:')
                 print('\tSource MAC: {}\n\tDestination MAC: {}'.format(format_mac(src_mac), format_mac(dest_mac)))
-                print('\tEtherType:\n\t\t(DEC): {}\n\t\t(BIN): {}\n\t\t(HEX): {}\n\t\t(STR): {}'.format(eth_type, format(eth_type, '#018b'), '0x' + '{:04x}'.format(eth_type).upper(), utils.get_eth_str('0x' + '{:04x}'.format(eth_type).upper())))
+                print('\tEtherType:\n\t\t(DEC): {}\n\t\t(BIN): {}\n\t\t(HEX): {}\n\t\t(STR): {}'.format(eth_type, format(eth_type, '#018b'), '0x' + '{:04x}'.format(eth_type).upper(), get_eth_str('0x' + '{:04x}'.format(eth_type).upper())))
 
                 # unpack ARP packet
                 if eth_type == 2054:
