@@ -1,5 +1,5 @@
 from scapy.all import *
-from utility.utils import *
+from utility.sniffer_data_sets import *
 
 
 # main loop
