@@ -119,8 +119,21 @@ Struct uses a specified bit ordering in order to know how to reassemble the extr
 
 For some reason, the VM was using the opposite byte order than the host machine, even when using the same network mode for struct. I noticed this when adding the ethertype JSON array, that contains a list of the ethertype HEX values and their corresponding description. I printed out the captured ethertypes and I was getting '0x0008', '0xDD86', and '0x0608'. These values are not in the table of ethertype values, however 0x86DD and 0x0806 are. I then realized the byt ordering was backwards and had to change it only for the VM. This fixed the issue, however, I still don't know why I had to reverse the byte ordering on the VM only. The byte odering is decided by the CPU not the OS.
 
+### 2. Images
 
+All images/icons are from Font Awesome.
 
+#### a. Random Icons
+
+The favicon images for the title bar of the progam uses the .ico format, as usual. The images were downloaded as an SVG from Font Awesome, and converted to .ico, as the `.iconphoto()` method only allows an .ico image.
+
+During the application initalizing step, the ico file is picked from a random icon, using a list of file paths. The list of file paths can allow adding/removing icons quickly.
+
+#### b. Using SVGs
+
+This project uses SVG images for all the icons, except for the favicon in the title bar. By default, the image tag for Tkinter and CTk do not allow the use of an SVG, and throws all sorts of errors, when reading the files. To fix this, I found the tksvg package, which does the proper conversions for the Tkinter and CTk images. 
+
+#### c. Editing SVGs
 
 
 
