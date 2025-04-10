@@ -10,3 +10,32 @@
 
 
     #self.sniff_thread = threading.Thread(target=self.sniff, daemon=True).start()
+
+
+        # table of captured packets
+        # self.packet_table = CTkTable(master=self.packet_scroll, column=len(self.headers))
+        # self.packet_table.add_row(self.headers, index=0)
+        # self.packet_table.grid(row=0, column=0, pady=0, sticky="nsew")
+
+
+                    self.table_queue.put([t, plen, format_mac(src_mac), format_mac(dest_mac)])
+                    self.table_data.append([t, plen, format_mac(src_mac), format_mac(dest_mac)])
+                    #self.packet_table.update_data()
+
+
+    def check_queue(self):
+        try:
+            data = self.table_queue.get_nowait()
+            print(data)
+            self.table_data.append(data)
+            self.update_table()
+        except queue.Empty:
+            pass
+        self.after(100, self.check_queue)
+
+
+    def update_table(self):
+        # self.packet_table.delete_rows(indices=list(range(1, len(self.captured_packets))))
+        #for row in self.table_data:
+            #self.packet_table.add_row(values=row, row=self.table_data.index(row))
+        pass

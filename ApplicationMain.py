@@ -1,20 +1,21 @@
 # import(s)
 # main GUI libraries
-import multiprocessing
+import os
 import threading
 import tkinter as tk
 import customtkinter as ctk
 from PyThreadKiller import PyThreadKiller
-from customtkinter import CTkButton, CTkToplevel
+from customtkinter import CTkButton, CTkToplevel, CTkLabel, filedialog, CTkTextbox
 from pylibpcap import get_iface_list
 from pylibpcap.base import Sniff
-from scapy.sendrecv import sniff
 # additional libraries for GUI
 from tktooltip import ToolTip
-from CTkTable import *
 # misc. libraries
 from utility.photo_functions import *
 from scapy.all import get_if_list
+from utility.sniffer import *
+from utility.Table import *
+from utility.sniffer_data_sets import get_ip_protocol, get_icmp_type
 
 # setting default/startup theme and color theme
 ctk.set_appearance_mode("dark")
@@ -23,27 +24,42 @@ ctk.set_default_color_theme("blue")
 
 # Application class
 class Application(ctk.CTk):
+    # *************************************************************************
+    # *                                 FLAGS                                 *
+    # *************************************************************************
     # flag for if the captured data is saved
     # open the 'save before exiting' dialog window
     is_saved = False
     # flag for if currently sniffing packets
     is_sniffing = False
-    # keeps track of the currently opened/saved file
-    current_file = None
-    # keep track of the pressed state of keys
-    pressed_keys = {}
-    # keep track of the current UI scale
-    UI_scale = None
+    # determine if localhost traffic is filtered from the table
+    filter_local = True
+    # *************************************************************************
+    # *                                OBJECTS                                *
+    # *************************************************************************
     # the sniffer object
     sniffer_obj = None
     # thread to do the sniffing
     sniff_thread = None
+    # *************************************************************************
+    # *                           LISTS/ARRAYS/ETC.                           *
+    # *************************************************************************
+    # keep track of the pressed state of keys
+    pressed_keys = {}
     # keeps track of the captures packets
     captured_packets = [] # use len() + 1 for table index
+    # keep track of the column headers for packet table
+    headers = ["#", "Timestamp", "Packet Len.", "Src. IP", "Dest. IP", "Src Port", "Dest Port", "Protocol", "Sel Packet"]
+    # *************************************************************************
+    # *                           REGULAR VARIABLES                           *
+    # *************************************************************************
+    # keeps track of the currently opened/saved file
+    current_file = None
+    # keep track of the current UI scale
+    UI_scale = None
     # interface listening on
     interface = None
-    # keep track of the column headers for packet table
-    headers = ["Timestamp", "Packet Len.", "Src. Mac", "Dest. Mac", "Src. IP", "Dest. IP", "Src Port", "Dest Port", "Protocol"]
+
 
     def __init__(self):
         super().__init__() # call the init of the 'inherited class'
@@ -76,20 +92,20 @@ class Application(ctk.CTk):
 
         # add the buttons to the menu bar
         # capture file operations
-        self.new_capture = ctk.CTkButton(self.menu_bar, image=make_icon("images/icons/new_capture.svg", self.menu_bar._current_height-20), text="", corner_radius=0, width=30)
+        self.new_capture = ctk.CTkButton(self.menu_bar, image=make_icon("images/icons/new_capture.svg", self.menu_bar._current_height-20), text="", corner_radius=0, width=30, command=self.new_capture)
         ToolTip(self.new_capture, msg="New Capture", delay=0.5)
         self.new_capture.pack(side=tk.LEFT, padx=5)
         self.open_capture = ctk.CTkButton(self.menu_bar, image=make_icon("images/icons/open_capture.svg", 20), text="", corner_radius=0, width=30)
         ToolTip(self.open_capture, msg="Open Capture", delay=0.5)
         self.open_capture.pack(side=tk.LEFT)
-        self.save_capture = ctk.CTkButton(self.menu_bar, image=make_icon("images/icons/save_capture.svg", 20), text="", corner_radius=0, width=30)
+        self.save_capture = ctk.CTkButton(self.menu_bar, image=make_icon("images/icons/save_capture.svg", 20), text="", corner_radius=0, width=30, command=lambda x=None: self.save_data(x))
         ToolTip(self.save_capture, msg="Save Capture", delay=0.5)
         self.save_capture.pack(side=tk.LEFT, padx=5)
         # data capture operations
         self.start_capture = ctk.CTkButton(self.menu_bar, image=make_icon("images/icons/start_capture.svg", 20), text="", corner_radius=0, width=30)
         ToolTip(self.start_capture, msg="Start Capture", delay=0.5)
         self.start_capture.pack(side=tk.LEFT, padx=5)
-        self.stop_capture = ctk.CTkButton(self.menu_bar, image=make_icon("images/icons/stop_capture.svg", 20), text="", corner_radius=0, width=30, command=self.stop_capture)
+        self.stop_capture = ctk.CTkButton(self.menu_bar, image=make_icon("images/icons/stop_capture.svg", 20), text="", corner_radius=0, width=30, command=self.stop_cap)
         ToolTip(self.stop_capture, msg="Stop Capture", delay=0.5)
         self.stop_capture.pack(side=tk.LEFT)
         self.edit_capture = ctk.CTkButton(self.menu_bar, image=make_icon("images/icons/edit_capture.svg", 20), text="", corner_radius=0, width=30)
@@ -119,9 +135,10 @@ class Application(ctk.CTk):
         self.packet_scroll.grid(row=1, column=0, pady=0, sticky="nsew")
         self.packet_scroll.grid_columnconfigure(0, weight=1)
         # table of captured packets
-        self.packet_table = CTkTable(master=self.packet_scroll, column=len(self.headers))
-        self.packet_table.add_row(self.headers, index=0)
-        self.packet_table.grid(row=0, column=0, pady=0, sticky="nsew")
+        # self.packet_table = CTkTable(master=self.packet_scroll, column=len(self.headers))
+        # self.packet_table.add_row(self.headers, index=0)
+        # self.packet_table.grid(row=0, column=0, pady=0, sticky="nsew")
+        self.packet_table = Table(self.packet_scroll, 0, 0, "nsew", 0, 0, values=[self.headers])
 
         # data view pane
         self.data_view_pane = ctk.CTkFrame(self)
@@ -131,10 +148,14 @@ class Application(ctk.CTk):
         # text data view
         self.text_pane = ctk.CTkScrollableFrame(self.data_view_pane, label_text="ASCII Packet Data")
         self.text_pane.grid(row=0, column=0, pady=0, sticky="nsew")
-
+        self.ascii_text = CTkLabel(self.text_pane, text="test")
+        self.ascii_text.grid(row=0, column=0, sticky="nsew")
         # hex/bin data view
         self.hex_bin_view = ctk.CTkScrollableFrame(self.data_view_pane, label_text="HEX/BIN Packet Data")
         self.hex_bin_view.grid(row=0, column=1, pady=0, sticky="nsew")
+        self.hex_bin_text = CTkLabel(self.hex_bin_view, text="Hexdump:")
+        self.hex_bin_text.grid(row=0, column=0, sticky="nsew")
+
 
 
     def show_interface_popup(self):
@@ -158,7 +179,7 @@ class Application(ctk.CTk):
         popup_label.pack()
 
         interfaces = get_iface_list()
-        print(interfaces)
+        # print(interfaces) # debug purposes
 
         for interface in interfaces:
             button = ctk.CTkButton(popup, text=interface, command=lambda x=interface, y=popup: self.set_current_interface(x, y))
@@ -170,21 +191,71 @@ class Application(ctk.CTk):
 
 
     def set_current_interface(self, name: str, popup: CTkToplevel):
+        # set interface name and set sniffing flag to True
         self.interface = name
         self.is_sniffing = True
         popup.destroy()
-        self.sniffer_obj = Sniff(self.interface, count=-1, promisc=1)
+        # setup sniffing object using interface name
+        self.sniffer_obj = Sniff(self.interface, count=-1, promisc=1, out_file="temp.pcap")
+        # start second thread for sniffing of data
         self.sniff_thread = PyThreadKiller(target=self.sniff)
         self.sniff_thread.start()
 
+
     def sniff(self):
         while self.is_sniffing:
+            protocol = src_port = dst_port = proto_name = ip4_src = ip4_dst = ip6_src = ip6_dst = None
             for plen, t, buf in self.sniffer_obj.capture():
-                print("\n\n[+]: Payload len=", plen)
-                print("[+]: Time", t)
-                self.captured_packets.append(buf)
-                #print("[+]: Payload", buf)
-                self.packet_table.add_row([t, plen], index=len(self.captured_packets))
+                self.captured_packets.append(buf) # add packet to array
+
+                # unpack the ethernet frame
+                dest_mac, src_mac, eth_type, packet_data = unpack_frame(buf)
+
+                # check if the source MAC and/or dest MAc are not all zeros
+                # disregards all localhost traffic
+                if (sum(src_mac) !=0 or sum(dest_mac)) and self.filter_local:
+                    # unpack an ARP packet
+                    if eth_type == 2054:
+                        hw_type, proto_type, hw_len, proto_len, op_code, send_hw, sned_proto, target_hw, target_proto = unpack_arp(packet_data)
+                    # unpack IPv6 packet
+                    elif eth_type == 34525:
+                        version, traffic_class, flow_label, payload_length, next_header, hop_limit, ip6_src, ip6_dst, ipv6_payload = unpack_ipv6(packet_data)
+                    # unpack IPv4 packet:
+                    elif eth_type == 2048:
+                        version, ihl, dscp, ecn, total_length, identification, flags, frag_off, ttl, protocol, head_check, ip4_src, ip4_dst, ipv4_payload = unpack_ipv4(packet_data)
+                        proto_abbr, proto_name, proto_ref, code = get_ip_protocol('0x' + '{:02x}'.format(protocol).upper())
+
+                        # unpack ICMP (0x01) - protocol
+                        if protocol == 1:
+                            type_code, subtype_code, icmp_checksum, icmp_data = unpack_icmp(ipv4_payload)
+                            icmp_type, icmp_subtype, icmp_type_status, ret_code = get_icmp_type(str(type_code), str(subtype_code))
+                        # unpack TCP/IP packet (ox06) - protocol
+                        elif protocol == 6:
+                            rc_port, dst_port, sequence_num, ack_num, data_offset, reserved, flags, window, tcp_checksum, upointer, tcp_data = unpack_tcp(ipv4_payload)
+                        # unpack UDP packet (0x11) - protocol
+                        elif protocol == 17:
+                            src_port, dst_port, length, udp_checksum, udp_data = unpack_udp(ipv4_payload)
+
+
+
+                    self.packet_table.add_row([str(len(self.captured_packets)),
+                                               t,
+                                               plen,
+                                               format_ip(ip4_src) if ip4_src is not None and eth_type == 2048 else form_ipv6_addr(ip6_src) if ip6_src is not None and eth_type == 34525 else "n/a",
+                                               format_ip(ip4_dst) if ip4_dst is not None and eth_type == 2048 else form_ipv6_addr(ip6_dst) if ip6_dst is not None and eth_type == 34525 else "n/a",
+                                               src_port if protocol is not None and ((protocol == 6) or (protocol == 17)) else "n/a",
+                                               dst_port if protocol is not None and ((protocol == 6) or (protocol == 17)) else "n/a",
+                                               proto_name if proto_name is not None else "n/a",
+                                               None],
+                                              lambda i=len(self.captured_packets): self.set_data_panes(i))
+
+
+    def set_data_panes(self, index: int):
+        new_text = "Packet Data:\n" + "\n\ninputted packet index: " + str(index) + "\npacket data: " + str(self.captured_packets[index])
+
+
+        # set the text of the label
+        self.ascii_text.configure(text=new_text)
 
 
     def on_key_press(self, event):
@@ -249,30 +320,6 @@ class Application(ctk.CTk):
         # Ctrl + Shift + 0 = Reset zoom
         if self.pressed_keys.get("Control_L") and self.pressed_keys.get("Shift_L") and self.pressed_keys.get("parenright"):
             self.zoom_reset()
-
-
-    def on_window_close(self):
-        """
-        Tasks to run before the program exiting, such as saving unsaved data, etc.
-
-        Args:
-            self: The instance of the Application class.
-
-        Returns:
-            None
-
-        Raises:
-            None
-        """
-        self.is_sniffing = False
-
-        # check if the data has been saved
-        # if not, open save file dialog box
-        if not self.is_saved:
-            print('data was not saved....')
-
-        # dispose of window resources more gracefully
-        self.destroy()
 
 
     def zoom_in(self):
@@ -343,9 +390,93 @@ class Application(ctk.CTk):
         self.filter_button.configure(image=self.filter_entry.image)
 
 
-    def stop_capture(self):
+    def stop_cap(self):
         self.is_sniffing = False
         self.sniff_thread.kill()
+
+
+    def on_window_close(self):
+        """
+        Tasks to run before the program exiting, such as saving unsaved data, etc.
+
+        Args:
+            self: The instance of the Application class.
+
+        Returns:
+            None
+
+        Raises:
+            None
+        """
+
+        if self.is_sniffing:
+            self.stop_cap()
+
+        # check if the data has been saved
+        # if not, open save file dialog box
+        if not self.is_saved and len(self.captured_packets) != 0:
+            print('data was not saved....')
+            # show save dialog box
+            popup = ctk.CTkToplevel()
+            popup.title("unsaved data...")
+            popup.wm_attributes("-topmost", 1)
+
+            # content of popup
+            label = CTkLabel(popup, text="You have unsaved data. Do you wish to save it?")
+            label.grid(row=0, column=0, columnspan=3)
+            save = CTkButton(popup, text="Save Changes", command=lambda x=popup: self.save_data(x))
+            save.grid(row=1, column=0)
+            quita = CTkButton(popup, text="Quit Without Saving", command=lambda x=popup: self.dont_save(x))
+            quita.grid(row=1, column=1)
+            cancel = CTkButton(popup, text="Cancel", command=lambda x=popup: self.cancel(x))
+            cancel.grid(row=1, column=2)
+
+            popup.focus_set()
+            popup.wait_window()
+        # data has already been saved, safe to just exit
+        else:
+            self.destroy()
+
+
+    def save_data(self, popup: CTkToplevel):
+        if popup:
+            popup.destroy()
+
+        filename = filedialog.asksaveasfile(defaultextension=".pcap", filetypes=[("libpcap Files", "*.pcap"), ("All Files", "*.*")])
+
+        if filename:
+            try:
+                os.replace("temp.pcap", filename.name)
+                self.is_saved = True # set saved flag
+            except Exception as e:
+                print(e.with_traceback())
+        print(filename.name)
+        filename.close()
+
+
+    def dont_save(self, popup: CTkToplevel):
+        popup.destroy()
+        self.destroy()
+
+
+    def cancel(self, popup: CTkToplevel):
+        popup.destroy()
+
+
+    def new_capture(self):
+        self.packet_table = Table(self.packet_scroll, 0, 0, "nsew", 0, 0, values=[self.headers])
+        self.captured_packets = []
+        self.is_saved = False
+        if os.path.exists("temp.pcap"):
+            os.remove("temp.pcap")
+        self.show_interface_popup()
+
+
+    def open_capture(self):
+        pass
+
+
+
 
 
 # the 'main' function

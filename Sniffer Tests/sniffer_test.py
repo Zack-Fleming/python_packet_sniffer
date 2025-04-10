@@ -72,6 +72,7 @@ def main():
                         print('\t\t\tData Offset: {}\n\t\t\tReserved Bits: {}'.format(data_offset, reserved))
                         print('\t\t\tFlags: {}\n\t\t\tSliding Window: {}'.format(flags, window))
                         print('\t\t\tChecksum: {}\n\t\t\tUrgent Pointer: {}'.format(checksum, upointer))
+                    # UDP
                     elif protocol == 17:
                         src_port, dst_port, length, checksum, udp_data = unpack_udp(ipv4_payload)
                         print('\t\tUser Datagram Protocol Packet:')

@@ -1,5 +1,5 @@
 from scapy.all import *
-from sniffer_data_sets import *
+import re
 
 
 def unpack_frame(data: bytes):
@@ -45,8 +45,7 @@ def unpack_arp(data: bytes):
         None
 
     """
-    hw_type, proto_type, hw_len, p_len, op_code, send_hw, send_proto, target_hw, target_proto = struct.unpack(
-        '! H H B B H 6s 4s 6s 4s', data[:28])
+    hw_type, proto_type, hw_len, p_len, op_code, send_hw, send_proto, target_hw, target_proto = struct.unpack('! H H B B H 6s 4s 6s 4s', data[:28])
     return hw_type, proto_type, hw_len, p_len, op_code, send_hw, send_proto, target_hw, target_proto
 
 
@@ -225,6 +224,7 @@ def format_ip(ip: bytes):
 def form_ipv6_addr(addr: bytes):
     """
     Formats raw IPv6 address data into a formatted string.
+    Has support for the shorthand IPv6addresses.
 
     Args:
         addr: bytes - raw data of the address
@@ -236,4 +236,4 @@ def form_ipv6_addr(addr: bytes):
         None
     """
     ip_str = map('{:04x}'.format, addr)
-    return ':'.join(ip_str).upper()
+    return re.sub(r"[:]{2,}", "::", ':'.join(ip_str).upper().replace("0000", ""))

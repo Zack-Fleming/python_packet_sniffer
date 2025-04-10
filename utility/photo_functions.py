@@ -6,8 +6,16 @@ import xml.etree.ElementTree as ET
 # select a random icon image for the taskbar and ico
 def make_app_icon():
     """
+    Loads a random favicon from the list.
 
-    :return:
+    Args:
+        None
+
+    Returns:
+        ImageTK.PhotoImage
+
+    Raises:
+        None
     """
     images = [
         "images/icons/ethernet-solid.ico",
