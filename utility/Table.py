@@ -1,7 +1,7 @@
 import tkinter
-
 import customtkinter
-from customtkinter import CTkFrame, CTkScrollableFrame, CTkButton
+from customtkinter import CTkFrame, CTkScrollableFrame, CTkButton, CTkLabel
+
 
 class Table(CTkFrame):
     def __init__(
@@ -58,14 +58,9 @@ class Table(CTkFrame):
         # base frame of the table
         self.grid(row=parent_row, column=parent_col, padx=px, pady=py, sticky=sticky)
         self.grid_columnconfigure(index=tuple(range(self.cols)), weight=1)
+        #self.configure(fg_color="#ff0000")
 
-        # setup the column panes
-        self.col_panes = []
-        for i in range(self.cols):
-            self.col_panes.append(CTkFrame(self))
-            self.col_panes[i].grid(row=0, column=i,)
-
-        # draw the table
+        # draw the table with initial data
         for value in values:
             self.add_row(value)
 
@@ -75,15 +70,14 @@ class Table(CTkFrame):
             self.data.append(values)
             # fill the row with the data
             for i in range(len(values) - (1 if self.num_rows != 0 else 0)):
-                cell = tkinter.Label(self.col_panes[i], text=values[i])
-                #cell = CTkLabel(self.col_panes[i], text=values[i])
-                cell.grid(column=0, row=self.num_rows, sticky="we")
+                cell = tkinter.Label(self, text=values[i], background=("#2b2b2b" if self.num_rows % 2 == 0 else "#242424"), fg="#ffffff")
+                #cell = CTkLabel(self, text=values[i])
+                cell.grid(column=i, row=self.num_rows, sticky="we")
 
             # add the additional button, only on non-header rows
             if self.num_rows != 0:
-                btn = CTkButton(self.col_panes[self.cols-1], text="packet: " + str(self.num_rows), corner_radius=0, command=command)
-
-                btn.grid(column=0, row=self.num_rows, sticky="we")
+                btn = CTkButton(self, text="packet: " + str(self.num_rows), corner_radius=0, command=command)
+                btn.grid(column=self.cols-1, row=self.num_rows, sticky="we")
 
             # increment current row counter
             self.num_rows += 1
