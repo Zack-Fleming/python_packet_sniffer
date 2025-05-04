@@ -1,6 +1,6 @@
 import tkinter
 import customtkinter
-from customtkinter import CTkFrame, CTkScrollableFrame, CTkButton, CTkLabel
+from customtkinter import CTkFrame, CTkScrollableFrame, CTkButton
 
 
 class Table(CTkFrame):
@@ -83,4 +83,4 @@ class Table(CTkFrame):
             self.num_rows += 1
         # do not add row, if the number of cols do not match
         else:
-            print("error: the number of inputted columns do not mach expected...")
+            raise ValueError("error: the number of inputted columns do not mach expected...")
