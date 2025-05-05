@@ -47,7 +47,7 @@ class Application(ctk.CTk):
     sniffer_obj = None
     # thread to do the sniffing
     sniff_thread = None
-    # thread stop evenr
+    # thread stop event
     stop_event = threading.Event()
     # *************************************************************************
     # *                           LISTS/ARRAYS/ETC.                           *
@@ -143,9 +143,6 @@ class Application(ctk.CTk):
         self.packet_scroll.grid(row=1, column=0, pady=0, sticky="nsew")
         self.packet_scroll.grid_columnconfigure(0, weight=1)
         # table of captured packets
-        # self.packet_table = CTkTable(master=self.packet_scroll, column=len(self.headers))
-        # self.packet_table.add_row(self.headers, index=0)
-        # self.packet_table.grid(row=0, column=0, pady=0, sticky="nsew")
         self.packet_table = Table(self.packet_scroll, 0, 0, "nsew", 0, 0, values=[self.headers])
 
         # data view pane
@@ -178,7 +175,7 @@ class Application(ctk.CTk):
             self: instance of the Application class
 
         Returns:
-            The chosen interface name as a str
+            None
 
         Raises:
             None
@@ -202,6 +199,20 @@ class Application(ctk.CTk):
         popup.wait_window()
 
     def set_current_interface(self, name: str, popup: CTkToplevel):
+        """
+        Sets the interface for sniffing and starts the capture.
+
+        Args:
+            self: the instance of the Application class
+            name: the name of the network interface to use
+            popup: the popup, mainly for destroying it
+
+        Returns:
+            None
+
+        Raises:
+            None
+        """
         # set interface name and set sniffing flag to True
         self.interface = name
         self.is_sniffing = True
@@ -213,6 +224,18 @@ class Application(ctk.CTk):
         self.sniff_thread.start()
 
     def sniff(self):
+        """
+        Main sniffing logic for application.
+
+        Args:
+            self: the instance of the Application class
+
+        Returns:
+            None
+
+        Raises:
+            None
+        """
         while not self.stop_event.is_set():
             for plen, t, buf in self.sniffer_obj.capture():
                 self.captured_packets.append(dict(timestamp=t, packet_length=plen, data=buf)) # add packet to dictionary array
@@ -251,10 +274,37 @@ class Application(ctk.CTk):
                             self.packet_table.add_row([str(len(self.captured_packets)), t, plen, format_ip(ip4_src), format_ip(ip4_dst), src_port, dst_port, proto_name, None], lambda i=len(self.captured_packets): self.handle_table_button_click(i))
 
     def handle_table_button_click(self, index: int):
+        """
+        Intermediate method to handle the button click event for the table buttons.
+
+        Args:
+            self: the instance of the Application class
+            index: index for grabbing the index in the captured_packets list.
+
+        Returns:
+            None
+
+        Raises:
+            None
+        """
         self.set_ascii_pane(index)
         self.set_hex_pane(index, "HEX")
 
     def set_ascii_pane(self, index: int):
+        """
+        Sets the text of the ASCII text pane. Uses similar logic as the sniff function.
+
+        Args:
+            self: the instance of the Application class
+            index: index to the captured_packets list
+
+        Returns:
+            None
+
+        Raises:
+            None
+
+        """
         pack_dict = self.captured_packets[index - 1] # get the specified packet
 
         # info for the packet
@@ -297,6 +347,7 @@ class Application(ctk.CTk):
                          f"\n{t2}Source Address: {format_mac(src)}\n{t2}Destination Address: {format_mac(dst)}"
                          f"\n{t2}Payload Data: {ipv6_payload}"
             )
+        # unpack IPv4 Packet
         elif eth_type == 2048:
             version, ihl, dscp, ecn, total_length, identification, flags, frag_off, ttl, protocol, head_check, src, dst, ipv4_payload = unpack_ipv4(packet_data)
             proto_abbr, proto_name, proto_ref, code = get_ip_protocol('0x' + '{:02x}'.format(protocol).upper())
@@ -348,30 +399,43 @@ class Application(ctk.CTk):
         self.ascii_text.configure(text=new_text)
 
     def set_hex_pane(self, index: int, form: str):
+        """
+        Sets the text of the HEX/Bin pane
+
+        Args:
+             self: the instance of the Application class
+             index: index for the captured_packets list
+             form: format to show the data as ('HEX', 'BIN')
+        """
         # make sure the inputted format is 'allowed'
         allowed_formats = {"BIN", "HEX"}
         if form not in allowed_formats:
             raise ValueError(f"Invalid format: {form}. Allowed formats: {allowed_formats}")
 
+        # get the data from the packet dictionary
         data = self.captured_packets[index - 1].get("data")
+
+        #strings to keep track of text
         new_text = f"{("0x%0.8X" % 0)}  "
         hex_line = ""
         ascii_line = ""
 
+        # counter for 'address' and newline placement
         i = 0
+        #iterate through the data list
         for byte in data:
             # convert the integer value to hex without '0x'
             hex_val = ("0x%0.2X" % byte).replace("0x", "")
             hex_line += hex_val
             ascii_line += (chr(byte) if chr(byte).isprintable() else ".")
-            if i > 1:
-                if (i + 1) % 16 != 0:
-                    if (i + 1) % 8 != 0:
+            if i > 1: # account for the first two bytes (edge case)
+                if (i + 1) % 16 != 0: # if the next byte is not dividable by 16, decide what to add in between bytes
+                    if (i + 1) % 8 != 0: # if the next byte is dividable by 8, add a space
                         hex_line += " "
-                    else:
+                    else: # add a couple of space, making the two columns of eight bytes
                         hex_line += "  "
                         ascii_line += "  "
-                else:
+                else: # if the next byte is dividable by 16, add the 'current' line of text and the newline
                     new_text += f"{hex_line}  {ascii_line}\n{("0x%0.8X" % (i + 1))}  "
                     hex_line = ""
                     ascii_line = ""
@@ -380,9 +444,7 @@ class Application(ctk.CTk):
             i += 1
 
         self.hex_bin_text.configure(text=new_text)
-        print(new_text)
-
-
+        #print(new_text) # debug purposes
 
     def on_key_press(self, event):
         """
@@ -497,6 +559,18 @@ class Application(ctk.CTk):
         self.update_widgets()
 
     def update_widgets(self):
+        """
+        Updates specific widgets when changing scale
+
+        Args:
+            self: the instance of the Application class
+
+        Returns:
+            None
+
+        Raises:
+            None
+        """
         self.new_capture.configure(image=make_icon("images/icons/new_capture.svg", int(20*self.UI_scale)))
         self.open_capture.configure(image=make_icon("images/icons/open_capture.svg", int(20*self.UI_scale)))
         self.save_capture.configure(image=make_icon("images/icons/save_capture.svg", int(20*self.UI_scale)))
@@ -510,12 +584,30 @@ class Application(ctk.CTk):
         self.filter_button.configure(image=self.filter_entry.image)
 
     def stop_cap(self):
-        self.is_sniffing = False
+        """
+        Stop the capture.
 
+        Args:
+            self: the instance of the Application class
+
+        Returns:
+            None
+
+        Raises:
+            None
+        """
+        # specify that sniffing has stopped
+        self.is_sniffing = False
         self.stop_event.set()
+
+        #wait for the sniffing thread to complete some work
         self.sniff_thread.join(0.9)
+
+        # if it's still alive, kill it
         if self.sniff_thread.is_alive():
             self.sniff_thread.kill()
+
+        # close the sniff object and the file its writing to
         self.sniffer_obj.close()
 
     def on_window_close(self):
@@ -532,6 +624,7 @@ class Application(ctk.CTk):
             None
         """
 
+        # if currently sniffing, stop
         if self.is_sniffing:
             self.stop_cap()
 
@@ -562,14 +655,31 @@ class Application(ctk.CTk):
             self.destroy()
 
     def save_data(self, popup: CTkToplevel, is_closing: bool):
+        """
+        Save the capture data.
+
+        Args:
+            self: the instance of the Application class
+            popup: popup, for destroying it
+            is_closing: should the program close after saving
+
+        Returns:
+            None
+
+        Raises:
+            None
+        """
+        # destroy the popup if not None
         if popup:
             popup.destroy()
 
+        # open a file dialog for the user (limited to .pcap or all)
         filename = filedialog.asksaveasfile(defaultextension=".pcap", filetypes=[("libpcap Files", "*.pcap"), ("All Files", "*.*")])
 
+        # if the user specified a file, save it
         if filename:
             try:
-                os.replace("temp.pcap", filename.name) # move the temparary file to the specified one
+                os.replace("temp.pcap", filename.name) # move the temporary file to the specified one
                 self.is_saved = True # set saved flag
 
                 # change ownership of the file - because the program needs to be run as root
@@ -587,22 +697,67 @@ class Application(ctk.CTk):
             self.destroy()
 
     def dont_save(self, popup: CTkToplevel):
+        """
+        Close the program without saving.
+
+        Args:
+            self: the instance of the Application class
+            popup: the popup, for destroying
+
+        Returns:
+            None
+
+        Raises:
+            None
+        """
         os.remove("temp.pcap")  # remove the temporary capture
+        # close the program
         popup.destroy()
         self.destroy()
 
     def cancel(self, popup: CTkToplevel):
+        """
+        The user changed their mind about quiting without saving.
+
+        Args:
+            self: the instance of the Application class
+            popup: the popup, for destroying
+
+        Returns:
+            None
+
+        Raises:
+            None
+        """
         popup.destroy()
 
     def new_capture(self):
+        """
+        Start a new capture, and delete the old 'session'.
+
+        Args:
+            self: the instance of the Application class
+
+        Returns:
+            None
+
+        Raises:
+            None
+        """
+        # create a new table instance, over the old one
         self.packet_table = Table(self.packet_scroll, 0, 0, "nsew", 0, 0, values=[self.headers])
+        # reset the packet list
         self.captured_packets = []
+        # switch the save status of the application
         self.is_saved = False
+        # remove the old tep file, if it exists
         if os.path.exists("temp.pcap"):
             os.remove("temp.pcap")
+        # show the interface popup, same one as when starting the application
         self.show_interface_popup()
 
     def open_capture(self):
+        # not implemented, yet
         pass
 
 # the 'main' function
