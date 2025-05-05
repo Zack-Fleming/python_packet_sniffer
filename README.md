@@ -3,6 +3,11 @@
 This is a python-based network packet sniffer and capture software. This project was developed for a software engineering class 'Advanced Topics in Programming', where we are tasked with creating a project using technologies/libraries we have not used before. I chose to create software that unpacks network traffic, like WireShark. This software also uses other libraries I have not used before, such as TKinter, libpcap, and py2exe. More libraries may be added as the project is continued. More information about the proposal of the project can be found in [PROPOSAL.md](https://github.com/Zack-Fleming/python_packet_sniffer/blob/master/PROPOSAL.md).
 
 
+## Security Disclaimer
+
+This software has the ability to expose personal information or information not for your eyes. The developer of this software does not take responsibility for any reprocussions from revealing secret or personally identifiable infomration. This software was made for a class, and is for testing purposes and learning purposes only. Use this software at your own risk. 
+
+
 ## Features
 
 The features of this project can be split into four categories:
