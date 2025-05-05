@@ -140,16 +140,24 @@ This project uses SVG images for all the icons, except for the favicon in the ti
 
 #### c. Editing SVGs
 
+For the theme specification, still planned in the future, the ability to edit the colors of the various SVGs used as icons in the applicaiton. The editing is done using the following steps:
+ 1. SVG is loaded into a its element tree
+ 2. Fill attribute is searched for
+ 3. Input color is writen to the fill attribute
+ 4. New data is written to the file
 
+I used the `xml.etree` package that is inside the base install of Python.
 
+### 3. Multithreading Shenanigans
 
+#### a. How to Kill a Tread
 
+By default, the `threading.Thread` does not have a pethod to kill the thread at any time. Instead one must either wait for the tread to do its job, or use an event to kill the thread. THere is an additional package called PyThreadKiller, that does contain a `.kill()` method, that can immediately kill a thread. I still used used an event to determin when the while loop should end; alingside the `.join()` method to allow the thread to process for a determined time, before killing it will `.kill()`.
 
+#### b. Table Stuff
 
+Due to the way I have implemented multithreading, the table sometimes containes rows that only have a few of the cells added, before the thread was killed. Unless I missed something, I could not fic this issue, no matter what I tried. If I will develop this project after the end of the class its for, I will revisit the method used to add the dat to the custom table class or the multithreading implementation.
 
+#### c. CTkLabel Giving Problems
 
-
-
-
-
-
+I was forced to use the label in the base tkinter, due to the CtkLabel giving errors, when used in the table. I think this is due to the label beinh half initialized before the thread initializing the label is terminated. The error is: `attributeerror: 'ctklabel' object has no attribute '_font'. did you mean: '_root'?`. This is another thing to revisit, if I would continue this project.
