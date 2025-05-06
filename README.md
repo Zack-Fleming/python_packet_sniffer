@@ -11,11 +11,27 @@ This software has the ability to expose personal information or information not 
 ## Libraries Used
 
 During the process of development, some of the libraries were changed and new ones were added. The following libraries were used:
- 1. tkinter - Python GUI library. [tkinter Docs](https://docs.python.org/3/library/tkinter.html).
- 2. CustomTkinter - modernized Python GUI library, built on tkinter. [CustomTkinter](https://customtkinter.tomschimansky.com/).
- 3. CTkXYFrame - CTkScrollFrame with horizontal and vertical scrollbars. [CTkXYFrame Docs](https://github.com/Akascape/CTkXYFrame).
- 4. tkinter-tooltip - tkinter tooltip widget, displays messages on hover. [tkinter-tooltip Docs](https://gnikit.github.io/tkinter-tooltip/).
- 5. python-libpcap - python pcap file and network sniffer library. [python-libpcap Docs](https://python-libpcap.readthedocs.io/en/latest/).
+
+Base libraries:
+ 1. [os](https://docs.python.org/3/library/os.html) - integrate with the OS; used for file IO and file permission editing
+ 2. [pwd](https://docs.python.org/3/library/pwd.html) - use of the password database for hte OS; used to get the UUID of the user, for file permission editing
+ 3. [datetime](https://docs.python.org/3/library/datetime.html) - date and time manipulation; used for calculating the time passed since the start of the capture in seconds (UTC -> seconds)
+ 4. [random](https://docs.python.org/3/library/random.html) - random number genereator; used to grab random image from list as the application icon
+ 5. [xml](https://docs.python.org/3/library/xml.etree.elementtree.html) - XML parsing and manipulation; used to manipulate XML of SVG files
+ 6. [struct](https://docs.python.org/3/library/struct.html) - library to unpack and pack data; used to unpack network traffic
+ 7. [re - Regular Expression](https://docs.python.org/3/library/re.html) - python regular expression library; used to compress IPv6 IPs
+
+Additionally installed libraries:
+ 1. [tkinter](https://docs.python.org/3/library/tkinter.html) - Python GUI library
+ 2. [CustomTkinter](https://customtkinter.tomschimansky.com/) - modernized Python GUI library, built on tkinter
+ 3. [CTkXYFrame](https://github.com/Akascape/CTkXYFrame) - CTkScrollFrame with horizontal and vertical scrollbars
+ 4. [tkinter-tooltip](https://gnikit.github.io/tkinter-tooltip/) - tkinter tooltip widget, displays messages on hover
+ 5. [python-libpcap](https://python-libpcap.readthedocs.io/en/latest/) - python pcap file and network sniffer library
+ 6. [PyThreadKiller](https://github.com/kumarmuthu/PyThreadKiller) - utility to manage and kill threads safely
+ 7. [tksvg](https://github.com/TkinterEP/python-tksvg) - library to add SVG support to tkinter
+ 8. [pytz](https://pythonhosted.org/pytz/) - definitions of world timezonse for datetime; used for timestamp to UTC
+ 9. [pillow](https://github.com/python-pillow/Pillow) - fork of the python image library; used for loading the .ico files for the application icon
+ 10. [scapy](https://scapy.net/) - packet manipulation library; used for the implementation/reference of struct (may be removed and changed to defualt struct module
 
 
 ## Features
