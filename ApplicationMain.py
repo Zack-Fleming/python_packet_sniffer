@@ -8,7 +8,7 @@ from utility.CTkXYFrame import CTkXYFrame
 # additional libraries for GUI
 from tktooltip import ToolTip
 # network sniffing
-from pylibpcap import get_iface_list
+from pylibpcap import get_iface_list, rpcap
 from pylibpcap.base import Sniff
 # misc. libraries
 from utility.photo_functions import *
@@ -100,10 +100,10 @@ class Application(ctk.CTk):
 
         # add the buttons to the menu bar
         # capture file operations
-        self.new_capture = CTkButton(self.menu_bar, image=make_icon("images/icons/new_capture.svg", self.menu_bar._current_height-20), text="", corner_radius=0, width=30, command=self.new_capture)
+        self.new_capture = CTkButton(self.menu_bar, image=make_icon("images/icons/new_capture.svg", self.menu_bar._current_height-20), text="", corner_radius=0, width=30, command=self.new_cap)
         ToolTip(self.new_capture, msg="New Capture", delay=0.5)
         self.new_capture.pack(side=tk.LEFT, padx=5)
-        self.open_capture = CTkButton(self.menu_bar, image=make_icon("images/icons/open_capture.svg", 20), text="", corner_radius=0, width=30)
+        self.open_capture = CTkButton(self.menu_bar, image=make_icon("images/icons/open_capture.svg", 20), text="", corner_radius=0, width=30, command=self.open_cap)
         ToolTip(self.open_capture, msg="Open Capture", delay=0.5)
         self.open_capture.pack(side=tk.LEFT)
         self.save_capture = CTkButton(self.menu_bar, image=make_icon("images/icons/save_capture.svg", 20), text="", corner_radius=0, width=30, command=lambda x=None, y=False: self.save_data(x, y))
@@ -165,7 +165,6 @@ class Application(ctk.CTk):
         #self.hex_bin_view.pack(fill="both")
         self.hex_bin_text = CTkLabel(self.hex_bin_view, text="Hexdump:", justify="left", font=("Courier", 14))
         self.hex_bin_text.grid(row=0, column=0, sticky="nsew")
-
 
     def show_interface_popup(self):
         """
@@ -245,7 +244,7 @@ class Application(ctk.CTk):
 
                 # check if the source MAC and/or dest MAc are not all zeros
                 # disregards all localhost traffic
-                if (sum(src_mac) != 0 or sum(dest_mac)) and self.filter_local:
+                if (sum(src_mac) != 0 or sum(dest_mac) != 0) and self.filter_local:
                     # unpack an ARP packet
                     if eth_type == 2054:
                         hw_type, proto_type, hw_len, proto_len, op_code, send_hw, send_proto, target_hw, target_proto = unpack_arp(packet_data)
@@ -506,6 +505,10 @@ class Application(ctk.CTk):
         # Ctrl + Shift + 0 = Reset zoom
         if self.pressed_keys.get("Control_L") and self.pressed_keys.get("Shift_L") and self.pressed_keys.get("parenright"):
             self.zoom_reset()
+        if (self.pressed_keys.get("Control_L") or self.pressed_keys.get("Control_R")) and self.pressed_keys.get("o"):
+            self.open_cap()
+        if (self.pressed_keys.get("Control_L") or self.pressed_keys.get("Control_R")) and self.pressed_keys.get("s"):
+            self.save_data()
 
     def zoom_in(self):
         """
@@ -654,7 +657,7 @@ class Application(ctk.CTk):
             self.packet_table = None
             self.destroy()
 
-    def save_data(self, popup: CTkToplevel, is_closing: bool):
+    def save_data(self, popup: CTkToplevel = None, is_closing: bool = False):
         """
         Save the capture data.
 
@@ -689,8 +692,8 @@ class Application(ctk.CTk):
                 os.chown(filename.name, uid, gid)   # perform the ownership change
             except Exception as e:
                 print(e)
-        # print(filename.name) # debugging purposes
-        filename.close() # closing the file properly
+            # print(filename.name) # debugging purposes
+            filename.close() # closing the file properly
 
         if is_closing: # close the program, if we got here from the quit button
             self.packet_table = None
@@ -731,7 +734,7 @@ class Application(ctk.CTk):
         """
         popup.destroy()
 
-    def new_capture(self):
+    def new_cap(self):
         """
         Start a new capture, and delete the old 'session'.
 
@@ -756,9 +759,72 @@ class Application(ctk.CTk):
         # show the interface popup, same one as when starting the application
         self.show_interface_popup()
 
-    def open_capture(self):
-        # not implemented, yet
-        pass
+    def open_cap(self):
+        """
+        Opens a previously saved .pcap file
+
+        Args:
+            self: instance of the Application class
+
+        Returns:
+            None
+
+        Raises:
+            None
+        """
+        # get the filepath of the file
+        filename = filedialog.askopenfile(defaultextension=".pcap", filetypes=[("libpcap Files", "*.pcap"), ("All Files", "*.*")])
+        # print(filename.name) # debug purposes
+
+        # reset the table (especially if a new session was made)
+        self.packet_table = Table(self.packet_scroll, 0, 0, "nsew", 0, 0, values=[self.headers])
+        # reset the packet list
+        self.captured_packets = []
+        # set save state to true
+        self.is_saved = True
+
+        # if the user actually selected a file
+        if filename:
+            # use pylibpcap to read the data of the file
+            # and save it into the captured_packets list
+            for leng, t, pkt in rpcap(filename.name):
+                self.captured_packets.append(dict(timestamp=t, packet_length=len, data=pkt))  # add packet to dictionary array
+                # print(f"Length: {leng}\nTimestamp: {t}\nData: {pkt}") #debugging purposes
+
+                # unpack the ethernet frame
+                dest_mac, src_mac, eth_type, packet_data = unpack_frame(pkt)
+
+                # check if the source MAC and/or dest MAc are not all zeros
+                # disregards all localhost traffic
+                if (sum(src_mac) != 0 or sum(dest_mac) != 0) and self.filter_local:
+                    # unpack an ARP packet
+                    if eth_type == 2054:
+                        hw_type, proto_type, hw_len, proto_len, op_code, send_hw, send_proto, target_hw, target_proto = unpack_arp(packet_data)
+                        self.packet_table.add_row([str(len(self.captured_packets)), t, leng, format_ip(send_proto), format_ip(target_proto), "n/a", "n/a", get_eth_str('0x' + '{:04x}'.format(eth_type).upper()), None], lambda i=len(self.captured_packets): self.handle_table_button_click(i))
+                    # unpack IPv6 packet
+                    elif eth_type == 34525:
+                        version, traffic_class, flow_label, payload_length, next_header, hop_limit, ip6_src, ip6_dst, ipv6_payload = unpack_ipv6(packet_data)
+                        self.packet_table.add_row([str(len(self.captured_packets)), t, leng, form_ipv6_addr(ip6_src), form_ipv6_addr(ip6_dst), "n/a", "n/a", get_eth_str('0x' + '{:04x}'.format(eth_type).upper()), None], lambda i=len(self.captured_packets): self.handle_table_button_click(i))
+                    # unpack IPv4 packet:
+                    elif eth_type == 2048:
+                        version, ihl, dscp, ecn, total_length, identification, flags, frag_off, ttl, protocol, head_check, ip4_src, ip4_dst, ipv4_payload = unpack_ipv4(packet_data)
+                        proto_abbr, proto_name, proto_ref, code = get_ip_protocol('0x' + '{:02x}'.format(protocol).upper())
+
+                        # unpack ICMP (0x01) - protocol
+                        if protocol == 1:
+                            type_code, subtype_code, icmp_checksum, icmp_data = unpack_icmp(ipv4_payload)
+                            icmp_type, icmp_subtype, icmp_type_status, ret_code = get_icmp_type(str(type_code),str(subtype_code))
+                            self.packet_table.add_row([str(len(self.captured_packets)), t, leng, format_ip(ip4_src), format_ip(ip4_dst), "n/a", "n/a", proto_name, None], lambda i=len(self.captured_packets): self.handle_table_button_click(i))
+                        # unpack TCP/IP packet (ox06) - protocol
+                        elif protocol == 6:
+                            src_port, dst_port, sequence_num, ack_num, data_offset, reserved, flags, window, tcp_checksum, upointer, tcp_data = unpack_tcp(ipv4_payload)
+                            self.packet_table.add_row([str(len(self.captured_packets)), t, leng, format_ip(ip4_src), format_ip(ip4_dst), src_port, dst_port, proto_name, None], lambda i=len(self.captured_packets): self.handle_table_button_click(i))
+                        # unpack UDP packet (0x11) - protocol
+                        elif protocol == 17:
+                            src_port, dst_port, length, udp_checksum, udp_data = unpack_udp(ipv4_payload)
+                            self.packet_table.add_row([str(len(self.captured_packets)), t, leng, format_ip(ip4_src), format_ip(ip4_dst), src_port, dst_port, proto_name, None], lambda i=len(self.captured_packets): self.handle_table_button_click(i))
+
+
 
 # the 'main' function
 if __name__ == "__main__":
