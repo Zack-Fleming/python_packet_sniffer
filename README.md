@@ -8,6 +8,16 @@ This is a python-based network packet sniffer and capture software. This project
 This software has the ability to expose personal information or information not for your eyes. The developer of this software does not take responsibility for any reprocussions from revealing secret or personally identifiable infomration. This software was made for a class, and is for testing purposes and learning purposes only. Use this software at your own risk. 
 
 
+## Libraries Used
+
+During the process of development, some of the libraries were changed and new ones were added. The following libraries were used:
+ 1. tkinter - Python GUI library. [tkinter Docs](https://docs.python.org/3/library/tkinter.html).
+ 2. CustomTkinter - modernized Python GUI library, built on tkinter. [CustomTkinter](https://customtkinter.tomschimansky.com/).
+ 3. CTkXYFrame - CTkScrollFrame with horizontal and vertical scrollbars. [CTkXYFrame Docs](https://github.com/Akascape/CTkXYFrame).
+ 4. tkinter-tooltip - tkinter tooltip widget, displays messages on hover. [tkinter-tooltip Docs](https://gnikit.github.io/tkinter-tooltip/).
+ 5. python-libpcap - python pcap file and network sniffer library. [python-libpcap Docs](https://python-libpcap.readthedocs.io/en/latest/).
+
+
 ## Features
 
 The features of this project can be split into four categories:
