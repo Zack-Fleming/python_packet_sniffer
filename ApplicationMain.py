@@ -1,6 +1,5 @@
 # import(s)
 # main GUI libraries
-import tkinter
 import tkinter as tk
 import customtkinter as ctk
 from customtkinter import CTkToplevel, filedialog, CTkEntry, CTkLabel
@@ -151,20 +150,16 @@ class Application(ctk.CTk):
         self.data_view_pane.grid_columnconfigure((0, 1), weight=1)
         self.data_view_pane.grid_rowconfigure(0, weight=1)
         # text data view
-        self.text_pane = CTkXYFrame(self.data_view_pane)
-        #self.text_pane = CTkScrollableFrame(self.data_view_pane, label_text="ASCII Packet Data")
+        self.text_pane = CTkScrollableFrame(self.data_view_pane, label_text="ASCII Packet Data")
+        #print(self.text_pane._parent_frame._fg_color) # debugging purposes
         self.text_pane.grid(row=0, column=0, pady=0, sticky="nsew")
-        #self.text_pane.pack(fill="both")
-        self.ascii_pane_header = CTkLabel(self.text_pane, text="ASCII Packet Data", font=("Arial", 14))
-        self.ascii_pane_header.grid(row=0, column=0, sticky="ew")
-        self.ascii_text = CTkLabel(self.text_pane, text="", justify="left", font=("Arial", 14))
-        self.ascii_text.grid(row=1, column=0, padx = 0, sticky="w")
+        self.ascii_text = tk.Text(self.text_pane, fg="#ffffff", background="#333333", borderwidth=0, highlightthickness=0)
+        self.ascii_text.pack(fill="both")
         # hex/bin data view
         self.hex_bin_view = CTkScrollableFrame(self.data_view_pane, label_text="HEX/BIN Packet Data")
         self.hex_bin_view.grid(row=0, column=1, pady=0, sticky="nsew")
-        #self.hex_bin_view.pack(fill="both")
-        self.hex_bin_text = CTkLabel(self.hex_bin_view, text="Hexdump:", justify="left", font=("Courier", 14))
-        self.hex_bin_text.grid(row=0, column=0, sticky="nsew")
+        self.hex_bin_text = tk.Text(self.hex_bin_view, fg="#ffffff", background="#333333", borderwidth=0, highlightthickness=0)
+        self.hex_bin_text.pack(fill="both")
 
     def show_interface_popup(self):
         """
@@ -305,36 +300,72 @@ class Application(ctk.CTk):
 
         """
         pack_dict = self.captured_packets[index - 1] # get the specified packet
+        self.ascii_text.delete('0.0', tk.END) # clear the text before adding new
+        new_text = ""
 
-        # info for the packet
-        new_text = (f"Packet #{index} Data:" +
-                    f"\n{t1}Length: {pack_dict.get("packet_length")} bytes" +
-                    f"\n{t1}Timestamp (seconds): {pack_dict.get("timestamp")}" +
-                    f"\n{t1}Timestamp (UTC): {datetime.datetime.fromtimestamp(pack_dict.get("timestamp"), pytz.UTC)}UTC"
-        )
+        # tags for the colored text (cc, 33, 80)
+        self.ascii_text.tag_config('source', foreground="#33cccc")
+        self.ascii_text.tag_config('destination', foreground="#cc33cc")
+        self.ascii_text.tag_config('binary', foreground="#cccc33")
+        self.ascii_text.tag_config('hex', foreground="#80cccc")
+        self.ascii_text.tag_config('decimal', foreground="#cc80cc")
+        self.ascii_text.tag_config('string', foreground="#cccc80")
+        self.ascii_text.tag_config('source2', foreground="#cc3333")
+        self.ascii_text.tag_config('destination2', foreground="#33cc33")
+        self.ascii_text.tag_config('binary2', foreground="#3333cc")
+        self.ascii_text.tag_config('hex2', foreground="#cc8080")
+        self.ascii_text.tag_config('decimal2', foreground="#80cc80")
+        self.ascii_text.tag_config('string2', foreground="#8080cc")
+
+
+        # insert packet data
+        self.ascii_text.insert("0.0", f"Packet #{index} Data:")
+        self.ascii_text.insert("end", f"\n{t1}Length: {pack_dict.get("packet_length")} bytes")
+        self.ascii_text.insert("end", f"\n{t1}Timestamp (seconds): {pack_dict.get("timestamp")}")
+        self.ascii_text.insert("end", f"\n{t1}Timestamp (UTC): {datetime.datetime.fromtimestamp(pack_dict.get("timestamp"), pytz.UTC)}UTC")
 
         #unpack the ethernet frame
         dest_mac, src_mac, eth_type, packet_data = unpack_frame(pack_dict.get("data"))
 
-        # ethernet frame data
-        new_text += ("\nEthernet Frame Data: "
-                     f"\n{t1}Source MAC: {format_mac(src_mac)}\n{t1}Destination MAC: {format_mac(dest_mac)}"
-                     f"\n{t1}Ether Type:"
-                     f"\n{t2}(DEC): {eth_type}\n{t2}(BIN): {format(eth_type, '#018b')}"
-                     f"\n{t2}(HEX): 0x{'{:04x}'.format(eth_type).upper()}\n{t2}(STR): {get_eth_str('0x' + '{:04x}'.format(eth_type).upper())}"
-        )
+        #insert the ethernet frame data
+        self.ascii_text.insert("end", "\nEthernet Frame Data: ")
+        self.ascii_text.insert("end", f"\n{t1}Source MAC: ")
+        self.ascii_text.insert("end", format_mac(src_mac), "source")
+        self.ascii_text.insert("end", f"\n{t1}Destination MAC: ")
+        self.ascii_text.insert("end", format_mac(dest_mac), "destination")
+        self.ascii_text.insert("end", f"\n{t1}Ether Type:")
+        self.ascii_text.insert("end", f"\n{t2}(DEC): ")
+        self.ascii_text.insert("end", str(eth_type), "decimal")
+        self.ascii_text.insert("end", f"\n{t2}(BIN): ")
+        self.ascii_text.insert("end", format(eth_type, '#018b'), "binary")
+        self.ascii_text.insert("end", f"\n{t2}(HEX): ")
+        self.ascii_text.insert("end", f"0x{'{:04x}'.format(eth_type).upper()}", "hex")
+        self.ascii_text.insert("end", f"\n{t2}(STR): ")
+        self.ascii_text.insert("end", get_eth_str('0x' + '{:04x}'.format(eth_type).upper()), "string")
 
         # unpack an ARP packet
         if eth_type == 2054:
             hw_type, proto_type, hw_len, proto_len, op_code, send_hw, send_proto, target_hw, target_proto = unpack_arp(packet_data)
 
-            new_text += (f"\n{t1}Address Resolution Protocol Packet: "
-                         f"\n{t2}Hardware Type: {hw_type}\n{t2}Protocol Type: {proto_type}"
-                         f"\n{t2}Hardware Length: {hw_len}\n{t2}Protocol Length: {proto_len}"
-                         f"\n{t2}Operation Code: {op_code} ({'request' if op_code == 1 else 'reply'})"
-                         f"\n{t2}Sender Hardware Address: {format_mac(send_hw)}\n{t2}Sender Protocol Address: {format_ip(send_proto)}"
-                         f"\n{t2}Target Hardware Address: {format_mac(target_hw)}\n{t2}Target Protocol Address: {format_ip(target_proto)}"
-            )
+            self.ascii_text.insert("end", f"\n{t1}Address Resolution Protocol Packet: ")
+            self.ascii_text.insert("end", f"\n{t2}Hardware Type: ")
+            self.ascii_text.insert("end", str(hw_type), "decimal")
+            self.ascii_text.insert("end", f"\n{t2}Protocol Type: ")
+            self.ascii_text.insert("end", str(proto_type), "decimal2")
+            self.ascii_text.insert("end", f"\n{t2}Hardware Length: ")
+            self.ascii_text.insert("end", str(hw_len), "decimal")
+            self.ascii_text.insert("end", f"\n{t2}Protocol Length: ")
+            self.ascii_text.insert("end", str(proto_len), "decimal2")
+            self.ascii_text.insert("end", f"\n{t2}Operation Code: ")
+            self.ascii_text.insert("end", f"{op_code} ({'request' if op_code == 1 else 'reply'})", "decimal")
+            self.ascii_text.insert("end", f"\n{t2}Sender Hardware Address: ")
+            self.ascii_text.insert("end", format_mac(send_hw), "source")
+            self.ascii_text.insert("end", f"\n{t2}Sender Protocol Address: ")
+            self.ascii_text.insert("end", format_ip(send_proto), "source2")
+            self.ascii_text.insert("end", f"\n{t2}Target Hardware Address: ")
+            self.ascii_text.insert("end", format_mac(target_hw), "destination")
+            self.ascii_text.insert("end", f"\n{t2}Target Protocol Address: ")
+            self.ascii_text.insert("end", format_ip(target_proto), "destination2")
         # unpack IPv6 packet
         elif eth_type == 34525:
             version, traffic_class, flow_label, payload_length, next_header, hop_limit, src, dst, ipv6_payload = unpack_ipv6(packet_data)
@@ -351,15 +382,55 @@ class Application(ctk.CTk):
             version, ihl, dscp, ecn, total_length, identification, flags, frag_off, ttl, protocol, head_check, src, dst, ipv4_payload = unpack_ipv4(packet_data)
             proto_abbr, proto_name, proto_ref, code = get_ip_protocol('0x' + '{:02x}'.format(protocol).upper())
 
-            new_text += (f"\n{t1}Internet Protocol Version 4 Packet:"
-                         f"\n{t2}Version: {version}\n{t2}Internet Header Length (IHL): {ihl}"
-                         f"\n{t2}Differentiated Services Code Point (DSCP): {dscp}\n{t2}xplicit Congestion Notification (ESC): {ecn}"
-                         f"\n{t2}Total Length: {total_length}\n{t2}Identification: {identification}"
-                         f"\n{t2}Flags: {format(flags, '#05b')}\n{t3}Reserved bit (R): {(flags >> 2) & 1}\n{t3}Dont\'t Fragment bit (DF): {(flags >> 1) & 1}\n{t3}More Fragments bit (MF): {flags & 1}"
-                         f"\n{t2}Fragment Offset: {frag_off}\n{t2}Time to Live (TTL): {ttl}"
-                         f"\n{t2}Protocol: {protocol}\n{t3}Abbreviation: {proto_abbr}\n{t3}Full Name: {proto_name}\n{t3}References: {proto_ref}"
-                         f"\n{t2}Header Checksum: {head_check}\n{t2}Source IP: {format_ip(src)}\n{t2}Destination IP: {format_ip(dst)}"
-            )
+            self.ascii_text.insert("end", f"\n{t1}Internet Protocol Version 4 Packet:")
+            self.ascii_text.insert("end", f"\n{t2}Version: ")
+            self.ascii_text.insert("end", str(version), "decimal")
+            self.ascii_text.insert("end", f"\n{t2}Internet Header Length (IHL): ")
+            self.ascii_text.insert("end", str(ihl), "decimal2")
+            self.ascii_text.insert("end", f"\n{t2}Differentiated Services Code Point (DSCP): ")
+            self.ascii_text.insert("end", str(dscp), "hex")
+            self.ascii_text.insert("end", f"\n{t2}Explicit Congestion Notification (ESC): ")
+            self.ascii_text.insert("end", str(ecn), "hex2")
+            self.ascii_text.insert("end", f"\n{t2}Total Length: ")
+            self.ascii_text.insert("end", str(total_length), "binary")
+            self.ascii_text.insert("end", f"\n{t2}Identification: ")
+            self.ascii_text.insert("end", str(identification), "binary2")
+
+            self.ascii_text.insert("end", f"\n{t2}Flags: ")
+            self.ascii_text.insert("end", format(flags, '#05b'), "string")
+            self.ascii_text.insert("end", f"\n{t3}Reserved bit (R): ")
+            self.ascii_text.insert("end", str((flags >> 2) & 1), "string2")
+            self.ascii_text.insert("end", f"\n{t3}Dont\'t Fragment bit (DF): ")
+            self.ascii_text.insert("end", str((flags >> 1) & 1), "decimal")
+            self.ascii_text.insert("end", f"\n{t3}More Fragments bit (MF): ")
+            self.ascii_text.insert("end", str(flags & 1), "decimal2")
+
+            self.ascii_text.insert("end", f"\n{t2}Fragment Offset: ")
+            self.ascii_text.insert("end", str(frag_off), "hex")
+
+            self.ascii_text.insert("end", f"\n{t2}Time to Live (TTL): ")
+            self.ascii_text.insert("end", str(ttl), "hex2")
+
+            self.ascii_text.insert("end", f"\n{t2}Protocol: ")
+            self.ascii_text.insert("end", str(protocol), "binary")
+
+            self.ascii_text.insert("end", f"\n{t3}Abbreviation: ")
+            self.ascii_text.insert("end", proto_abbr, "binary2")
+
+            self.ascii_text.insert("end", f"\n{t3}Full Name: ")
+            self.ascii_text.insert("end", proto_name, "string")
+
+            self.ascii_text.insert("end", f"\n{t3}References: ")
+            self.ascii_text.insert("end", proto_ref, "string2")
+
+            self.ascii_text.insert("end", f"\n{t2}Header Checksum: ")
+            self.ascii_text.insert("end", str(head_check), "decimal")
+
+            self.ascii_text.insert("end", f"\n{t2}Source IP: ")
+            self.ascii_text.insert("end", format_ip(src), "source")
+
+            self.ascii_text.insert("end", f"\n{t2}Destination IP: ")
+            self.ascii_text.insert("end", format_ip(dst), "destination")
 
             # protocol 1 (0x01) - ICMP
             if protocol == 1:
@@ -393,9 +464,7 @@ class Application(ctk.CTk):
                              f"\n{t3}UDP Data: {udp_data}"
                 )
 
-
-        # set the text of the label
-        self.ascii_text.configure(text=new_text)
+        self.ascii_text.insert("end", new_text)
 
     def set_hex_pane(self, index: int, form: str):
         """
@@ -413,6 +482,17 @@ class Application(ctk.CTk):
 
         # get the data from the packet dictionary
         data = self.captured_packets[index - 1].get("data")
+
+        # reset the text
+        self.hex_bin_text.delete("0.0", tk.END)
+
+        # # tags for the colored text (cc, 33, 80)
+        # self.hex_bin_text.tag_config('source', foreground="#33cccc")
+        # self.hex_bin_text.tag_config('destination', foreground="#cc33cc")
+        # self.hex_bin_text.tag_config('binary', foreground="#cccc33")
+        # self.hex_bin_text.tag_config('hex', foreground="#80cccc")
+        # self.hex_bin_text.tag_config('decimal', foreground="#cc80cc")
+        # self.hex_bin_text.tag_config('string', foreground="#cccc80")
 
         #strings to keep track of text
         new_text = f"{("0x%0.8X" % 0)}  "
@@ -442,7 +522,7 @@ class Application(ctk.CTk):
                 hex_line += " "
             i += 1
 
-        self.hex_bin_text.configure(text=new_text)
+        self.hex_bin_text.insert("0.0", new_text)
         #print(new_text) # debug purposes
 
     def on_key_press(self, event):
@@ -753,6 +833,9 @@ class Application(ctk.CTk):
         self.captured_packets = []
         # switch the save status of the application
         self.is_saved = False
+        # reset the text panes
+        self.ascii_text.delete('0.0', tk.END)
+        self.hex_bin_text.delete("0.0", tk.END)
         # remove the old tep file, if it exists
         if os.path.exists("temp.pcap"):
             os.remove("temp.pcap")
@@ -788,7 +871,7 @@ class Application(ctk.CTk):
             # use pylibpcap to read the data of the file
             # and save it into the captured_packets list
             for leng, t, pkt in rpcap(filename.name):
-                self.captured_packets.append(dict(timestamp=t, packet_length=len, data=pkt))  # add packet to dictionary array
+                self.captured_packets.append(dict(timestamp=t, packet_length=leng, data=pkt))  # add packet to dictionary array
                 # print(f"Length: {leng}\nTimestamp: {t}\nData: {pkt}") #debugging purposes
 
                 # unpack the ethernet frame
